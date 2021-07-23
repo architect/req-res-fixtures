@@ -1,4 +1,5 @@
 {
+  "name": "@architect/req-res-fixtures",
   "description": "API Gateway request/response fixtures for testing in various Architect libraries",
   "scripts": {
     "lint": "eslint . --fix"
