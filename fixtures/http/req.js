@@ -204,6 +204,24 @@ let arc7 = {
     isBase64Encoded: false
   },
 
+  // get / with brotli
+  getWithBrotli: {
+    version: '2.0',
+    routeKey: 'GET /',
+    rawPath: '/',
+    rawQueryString: '',
+    cookies,
+    headers: makeHeaders({ 'accept-encoding': 'gzip, br, deflate' }).headers,
+    requestContext: {
+      http: {
+        method: 'GET',
+        path: '/',
+      },
+      routeKey: 'GET /',
+    },
+    isBase64Encoded: false
+  },
+
   // post /form (JSON)
   postJson: {
     version: '2.0',

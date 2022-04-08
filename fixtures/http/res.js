@@ -1,3 +1,4 @@
+let { brotliCompressSync } = require('zlib')
 let b64enc = i => Buffer.from(i).toString('base64')
 
 /**
@@ -47,6 +48,16 @@ let arc7 = {
     body: b64enc('hi there\n'),
     headers: { 'content-type': 'application/pdf' },
     isBase64Encoded: true
+  },
+
+  // Any properly compressed response
+  encodedWithCompression: {
+    statusCode: 200,
+    body: brotliCompressSync('hi there\n'),
+    headers: {
+      'content-type': 'application/pdf',
+      'content-encoding': 'br',
+    }
   },
 
   // Set cookies param
