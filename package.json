@@ -6,8 +6,8 @@
     "lint": "eslint . --fix"
   },
   "devDependencies": {
-    "@architect/eslint-config": "~2.0.1",
-    "eslint": "~8.13.0"
+    "@architect/eslint-config": "~2.1.1",
+    "eslint": "~8.35.0"
   },
   "eslintConfig": {
     "extends": "@architect/eslint-config"
