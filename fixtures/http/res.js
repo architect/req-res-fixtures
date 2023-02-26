@@ -84,7 +84,24 @@ let arc7 = {
   // Invalid (HTTP APIs are comparably very forgiving, so we have to explicitly create an invalid payload)
   invalid: {
     statusCode: 'idk'
-  }
+  },
+
+  // Compression things
+  preferBrCompression: {
+    statusCode: 200,
+    body: text,
+    compression: 'br',
+  },
+  preferGzipCompression: {
+    statusCode: 200,
+    body: text,
+    compression: 'gzip',
+  },
+  disableCompression: {
+    statusCode: 200,
+    body: text,
+    compression: false,
+  },
 }
 
 let arc6 = {

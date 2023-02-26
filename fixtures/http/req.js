@@ -3,7 +3,7 @@ let b64enc = i => new Buffer.from(i).toString('base64')
 // Generate a recurring set of headers, with the ability to expand them to include additional headers if needed by the fixture
 function makeHeaders (additional) {
   let headers = {
-    'accept-encoding': 'gzip',
+    'accept-encoding': 'deflate',
     cookie: '_idx=abc123DEF456'
   }
   if (additional) headers = Object.assign(headers, additional)
@@ -212,6 +212,24 @@ let arc7 = {
     rawQueryString: '',
     cookies,
     headers: makeHeaders({ 'accept-encoding': 'gzip, br, deflate' }).headers,
+    requestContext: {
+      http: {
+        method: 'GET',
+        path: '/',
+      },
+      routeKey: 'GET /',
+    },
+    isBase64Encoded: false
+  },
+
+  // get / with gzip
+  getWithGzip: {
+    version: '2.0',
+    routeKey: 'GET /',
+    rawPath: '/',
+    rawQueryString: '',
+    cookies,
+    headers: makeHeaders({ 'accept-encoding': 'gzip, deflate' }).headers,
     requestContext: {
       http: {
         method: 'GET',
