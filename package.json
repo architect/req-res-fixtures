@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "@architect/eslint-config": "~2.1.1",
-    "eslint": "~8.35.0"
+    "eslint": "~8.43.0"
   },
   "eslintConfig": {
     "extends": "@architect/eslint-config"

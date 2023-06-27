@@ -1,47 +1,75 @@
 let b64enc = i => new Buffer.from(i).toString('base64')
 
 // Generate a recurring set of headers, with the ability to expand them to include additional headers if needed by the fixture
-function makeHeaders (additional) {
+function makeHeaders (additional, isRESTAPI = false) {
+  let agent = isRESTAPI ? 'User-Agent' : 'user-agent'
+  let fwdFor = isRESTAPI ? 'X-Forwarded-For' : 'x-forwarded-for'
+  let fwdPort = isRESTAPI ? 'X-Forwarded-Port' : 'x-forwarded-port'
+  let fwdProto = isRESTAPI ? 'X-Forwarded-Proto' : 'x-forwarded-proto'
   let headers = {
     'accept-encoding': 'deflate',
-    cookie: '_idx=abc123DEF456'
+    cookie: '_idx=abc123DEF456',
+    [agent]: 'Some Client 1.0',
+    [fwdFor]: '127.0.0.1',
+    [fwdPort]: '3333',
+    [fwdProto]: 'http',
   }
   if (additional) headers = Object.assign(headers, additional)
-  let multiValueHeaders = {}
-  Object.entries(headers).forEach(([ header, value ]) => {
-    multiValueHeaders[header] = [ value ]
-  })
-  return { headers, multiValueHeaders }
+  let result = { headers }
+
+  // Arc 6 REST-specific header format
+  if (isRESTAPI) {
+    let multiValueHeaders = {}
+    Object.entries(headers).forEach(([ header, value ]) => {
+      multiValueHeaders[header] = [ value ]
+    })
+    result.multiValueHeaders = multiValueHeaders
+  }
+
+  return result
 }
 
-let {
-  headers, // Just a regular set of baseline headers
-  multiValueHeaders // Arc 6 REST-specific header format
-} = makeHeaders()
-
 // Recurring header cases
+// Arc 7+
+let { headers } = makeHeaders()
+let { headers: headersJsonArc7 } = makeHeaders({ 'content-type': 'application/json' })
+let { headers: headersFormUrlArc7 } = makeHeaders({ 'content-type': 'application/x-www-form-urlencoded' })
+let { headers: headersFormDataArc7 } = makeHeaders({ 'content-type': 'multipart/form-data' })
+let { headers: headersOctetArc7 } = makeHeaders({ 'content-type': 'application/octet-stream' })
+// Arc 6
 let {
-  headers: headersJson,
-  multiValueHeaders: multiValueHeadersJson
-} = makeHeaders({ 'content-type': 'application/json' })
+  headers: headersArc6,
+  multiValueHeaders: multiValueHeadersArc6,
+} = makeHeaders(null, true)
 let {
-  headers: headersFormUrl,
-  multiValueHeaders: multiValueHeadersFormUrl
-} = makeHeaders({ 'content-type': 'application/x-www-form-urlencoded' })
+  headers: headersJsonArc6,
+  multiValueHeaders: multiValueHeadersJsonArc6,
+} = makeHeaders({ 'content-type': 'application/json' }, true)
 let {
-  headers: headersFormData,
-  multiValueHeaders: multiValueHeadersFormData
-} = makeHeaders({ 'content-type': 'multipart/form-data' })
+  headers: headersFormUrlArc6,
+  multiValueHeaders: multiValueHeadersFormUrlArc6,
+} = makeHeaders({ 'content-type': 'application/x-www-form-urlencoded' }, true)
 let {
-  headers: headersOctet,
-  multiValueHeaders: multiValueHeadersOctet
-} = makeHeaders({ 'content-type': 'application/octet-stream' })
+  headers: headersFormDataArc6,
+  multiValueHeaders: multiValueHeadersFormDataArc6,
+} = makeHeaders({ 'content-type': 'multipart/form-data' }, true)
+let {
+  headers: headersOctetArc6,
+  multiValueHeaders: multiValueHeadersOctetArc6,
+} = makeHeaders({ 'content-type': 'application/octet-stream' }, true)
 
 // Basic obj
 let data = { hi: 'there' }
 
 // Arc 7 HTTP
 let cookies = [ headers.cookie ]
+
+// Other metadata
+let protocol = 'HTTP/1.1'
+let sourceIp = '127.0.0.1'
+let userAgent = 'Some Client 1.0'
+let arc7RequestContextMeta = { protocol, sourceIp, userAgent }
+let arc6RequestContextMeta = { protocol, identity: { sourceIp, userAgent } }
 
 /**
  * Standard mock request set used in:
@@ -62,6 +90,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /',
     },
@@ -81,6 +110,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /',
     },
@@ -100,6 +130,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /',
     },
@@ -118,6 +149,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/nature/hiking',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /nature/{activities}',
     },
@@ -137,6 +169,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/nature/hiking',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /{proxy+}',
     },
@@ -157,6 +190,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/nature/hiking',
+        ...arc7RequestContextMeta,
       },
       routeKey: '$default',
     },
@@ -175,6 +209,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/path/hi/there',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /path/{proxy+}'
     },
@@ -194,6 +229,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/nature/hiking/wilderness',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /{activities}/{proxy+}',
     },
@@ -216,6 +252,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /',
     },
@@ -234,6 +271,7 @@ let arc7 = {
       http: {
         method: 'GET',
         path: '/',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'GET /',
     },
@@ -247,11 +285,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersJson,
+    headers: headersJsonArc7,
     requestContext: {
       http: {
         method: 'POST',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'POST /form',
     },
@@ -266,11 +305,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersFormUrl,
+    headers: headersFormUrlArc7,
     requestContext: {
       http: {
         method: 'POST',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'POST /form',
     },
@@ -285,11 +325,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersFormData,
+    headers: headersFormDataArc7,
     requestContext: {
       http: {
         method: 'POST',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'POST /form',
     },
@@ -304,11 +345,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersOctet,
+    headers: headersOctetArc7,
     requestContext: {
       http: {
         method: 'POST',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'POST /form',
     },
@@ -323,11 +365,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersJson,
+    headers: headersJsonArc7,
     requestContext: {
       http: {
         method: 'PUT',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'PUT /form',
     },
@@ -342,11 +385,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersJson,
+    headers: headersJsonArc7,
     requestContext: {
       http: {
         method: 'PATCH',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'PATCH /form',
     },
@@ -361,11 +405,12 @@ let arc7 = {
     rawPath: '/form',
     rawQueryString: '',
     cookies,
-    headers: headersJson,
+    headers: headersJsonArc7,
     requestContext: {
       http: {
         method: 'DELETE',
         path: '/form',
+        ...arc7RequestContextMeta,
       },
       routeKey: 'DELETE /form',
     },
@@ -380,8 +425,8 @@ let arc6 = {
     resource: '/',
     path: '/',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -391,6 +436,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/',
       resourcePath: '/',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -399,8 +445,8 @@ let arc6 = {
     resource: '/',
     path: '/',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: { whats: 'up' },
     multiValueQueryStringParameters: { whats: [ 'up' ] },
     pathParameters: null,
@@ -410,6 +456,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/',
       resourcePath: '/',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -418,8 +465,8 @@ let arc6 = {
     resource: '/',
     path: '/',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: { whats: 'there' },
     multiValueQueryStringParameters: { whats: [ 'up', 'there' ] },
     pathParameters: null,
@@ -429,6 +476,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/',
       resourcePath: '/',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -437,8 +485,8 @@ let arc6 = {
     resource: '/nature/{activities}',
     path: '/nature/hiking',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: { activities: 'hiking' },
@@ -448,6 +496,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/nature/hiking',
       resourcePath: '/nature/{activities}',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -456,8 +505,8 @@ let arc6 = {
     resource: '/{proxy+}',
     path: '/nature/hiking',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: { proxy: 'nature/hiking' },
@@ -467,6 +516,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/nature/hiking',
       resourcePath: '/{proxy+}',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -475,8 +525,8 @@ let arc6 = {
     resource: '/path/{proxy+}',
     path: '/path/hi/there',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: { proxy: 'hi/there' },
@@ -486,6 +536,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/path/hi/there',
       resourcePath: '/path/{proxy+}',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -494,8 +545,8 @@ let arc6 = {
     resource: '/{activities}/{proxy+}',
     path: '/nature/hiking/wilderness',
     httpMethod: 'GET',
-    headers,
-    multiValueHeaders,
+    headers: headersArc6,
+    multiValueHeaders: multiValueHeadersArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: {
@@ -508,6 +559,7 @@ let arc6 = {
       httpMethod: 'GET',
       path: '/nature/hiking/wilderness',
       resourcePath: '/{activities}/{proxy+}',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -516,8 +568,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'POST',
-    headers: headersJson,
-    multiValueHeaders: multiValueHeadersJson,
+    headers: headersJsonArc6,
+    multiValueHeaders: multiValueHeadersJsonArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -527,6 +579,7 @@ let arc6 = {
       httpMethod: 'POST',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -535,8 +588,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'POST',
-    headers: headersFormUrl,
-    multiValueHeaders: multiValueHeadersFormUrl,
+    headers: headersFormUrlArc6,
+    multiValueHeaders: multiValueHeadersFormUrlArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -546,6 +599,7 @@ let arc6 = {
       httpMethod: 'POST',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -554,8 +608,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'POST',
-    headers: headersFormData,
-    multiValueHeaders: multiValueHeadersFormData,
+    headers: headersFormDataArc6,
+    multiValueHeaders: multiValueHeadersFormDataArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -565,6 +619,7 @@ let arc6 = {
       httpMethod: 'POST',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -573,8 +628,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'POST',
-    headers: headersOctet,
-    multiValueHeaders: multiValueHeadersOctet,
+    headers: headersOctetArc6,
+    multiValueHeaders: multiValueHeadersOctetArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -584,6 +639,7 @@ let arc6 = {
       httpMethod: 'POST',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -592,8 +648,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'PUT',
-    headers: headersJson,
-    multiValueHeaders: multiValueHeadersJson,
+    headers: headersJsonArc6,
+    multiValueHeaders: multiValueHeadersJsonArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -603,6 +659,7 @@ let arc6 = {
       httpMethod: 'PUT',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -611,8 +668,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'PATCH',
-    headers: headersJson,
-    multiValueHeaders: multiValueHeadersJson,
+    headers: headersJsonArc6,
+    multiValueHeaders: multiValueHeadersJsonArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -622,6 +679,7 @@ let arc6 = {
       httpMethod: 'PATCH',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   },
 
@@ -630,8 +688,8 @@ let arc6 = {
     resource: '/form',
     path: '/form',
     httpMethod: 'DELETE',
-    headers: headersJson,
-    multiValueHeaders: multiValueHeadersJson,
+    headers: headersJsonArc6,
+    multiValueHeaders: multiValueHeadersJsonArc6,
     queryStringParameters: null,
     multiValueQueryStringParameters: null,
     pathParameters: null,
@@ -641,6 +699,7 @@ let arc6 = {
       httpMethod: 'DELETE',
       path: '/form',
       resourcePath: '/form',
+      ...arc6RequestContextMeta,
     },
   }
 }
