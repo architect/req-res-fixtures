@@ -21,9 +21,9 @@ let arc8 = {
       'Sec-WebSocket-Key': 'ABC123ABCYOUANDME==',
       'Sec-WebSocket-Version': '13',
       // 'X-Amzn-Trace-Id': 'Root=1-606a1ead-FFFF1043254985630FFFF3a',
-      // 'X-Forwarded-For': 'xxx.xxx.xxx.xxx',
-      // 'X-Forwarded-Port': '443',
-      // 'X-Forwarded-Proto': 'https'
+      'X-Forwarded-For': '127.0.0.1',
+      'X-Forwarded-Port': '3333',
+      'X-Forwarded-Proto': 'http',
     }),
     requestContext: {
       routeKey: '$connect',
@@ -37,7 +37,7 @@ let arc8 = {
       // extendedRequestId: 'BdgbsFnMvHcFaJg=',
       // requestTime: '25/Jun/2021:03:03:25 +0000',
       stage: 'staging',
-      // identity: { sourceIp: 'xxx.xxx.xxx.xxx' },
+      identity: { sourceIp: '127.0.0.1' },
       domainName: 'abc123unme.execute-api.us-west-2.amazonaws.com',
       // apiId: 'fdos88vuoi'
     },
@@ -59,7 +59,7 @@ let arc8 = {
       // extendedRequestId: 'dRm8FEWpPHcFSeQ=',
       // requestTime: '04/Apr/2021:20:16:51 +0000',
       stage: 'staging',
-      // identity: [Object],
+      identity: { sourceIp: '127.0.0.1' },
       domainName: 'abc123unme.execute-api.us-west-2.amazonaws.com',
       // apiId: 'abc123unme'
     },
@@ -86,7 +86,7 @@ let arc8 = {
       // requestTime: '04/Apr/2021:20:16:55 +0000',
       stage: 'staging',
       domainName: 'abc123unme.execute-api.us-west-2.amazonaws.com',
-      // identity: [ Object ],
+      identity: { sourceIp: '127.0.0.1' },
       // disconnectStatusCode: -1,
       // extendedRequestId: 'abc12345',
       // apiId: 'abc123unme'
